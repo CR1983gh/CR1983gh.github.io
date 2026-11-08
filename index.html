@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="googlebot" content="noindex,nofollow">
+<title>Deck 7</title>
+<style>
+  :root{
+    --bg:#eef4fb; --card:#fff; --fg:#24384d; --grau:#6b7f95; --akz:#2f6fb3;
+    --schwarz:#16283a; --gelb:#ffd400; --line:#dbe6f2; --line2:#c4d6ea; --hover:#e7f0fa;
+    --r-card:14px; --shadow:0 1px 5px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--fg);min-height:100vh}
+  header{background:var(--schwarz);color:#fff;padding:2.2rem 1rem 1.6rem;text-align:center;position:relative}
+  header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;background:linear-gradient(90deg,var(--gelb) 0 50%,#fff 50% 100%)}
+  header h1{margin:0;font-size:1.5rem;letter-spacing:.5px}
+  header p{color:#cfcfcf;margin:.3rem 0 0;font-size:.88rem}
+  main{max-width:760px;margin:0 auto;padding:1rem}
+  .gate{max-width:360px;margin:3.5rem auto;background:var(--card);border-radius:var(--r-card);box-shadow:var(--shadow);padding:1.6rem 1.4rem;text-align:center}
+  .gate input{width:100%;padding:.6rem .8rem;border:2px solid var(--line2);border-radius:10px;font-size:.95rem;background:var(--bg);color:var(--fg)}
+  .gate button{margin-top:.8rem;width:100%;padding:.55rem;border:none;border-radius:999px;background:var(--schwarz);color:var(--gelb);font-weight:800;font-size:.9rem;cursor:pointer}
+  .gate .err{color:#c0392b;font-size:.78rem;min-height:1em;margin-top:.5rem}
+  .cards{display:flex;flex-direction:column;gap:.7rem;margin-top:.6rem}
+  .pcard{display:flex;align-items:center;gap:.9rem;background:var(--card);border-radius:var(--r-card);box-shadow:var(--shadow);padding:.9rem 1rem;text-decoration:none;color:var(--fg);transition:transform .12s}
+  .pcard:hover{transform:translateY(-2px);background:var(--hover)}
+  .pico{flex:none;width:44px;height:44px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:1.3rem;object-fit:contain;overflow:hidden}
+  .pico img{width:100%;height:100%;object-fit:contain}
+  .pinfo{min-width:0}
+  .pinfo b{display:block;font-size:1rem}
+  .pinfo span{display:block;font-size:.8rem;color:var(--grau);margin-top:.1rem}
+  .chev{margin-left:auto;color:var(--grau);flex:none}
+  .lbl{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--grau);margin:1.4rem 0 .4rem}
+  .hidden{display:none}
+  footer{text-align:center;color:var(--grau);font-size:.72rem;margin:2.5rem 0 1.2rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚓ Deck 7</h1>
+  <p>Privater Projektzugang</p>
+</header>
+<main>
+  <div class="gate" id="gate">
+    <div style="font-size:2rem">🔒</div>
+    <p style="font-size:.85rem;color:var(--grau);margin:.4rem 0 .9rem">Zugang nur für Eingeweihte.</p>
+    <input type="password" id="pw" placeholder="Zugangscode" autocomplete="off">
+    <button id="go">An Bord gehen</button>
+    <div class="err" id="err"></div>
+  </div>
+  <div id="content" class="hidden">
+    <div class="lbl">Projekte</div>
+    <div class="cards" id="cards"></div>
+  </div>
+</main>
+<footer>Deck 7 · nicht gelistet</footer>
+<script>
+// SHA-256 des Zugangscodes (Code selbst liegt nirgends im Klartext)
+const H = '9d4a7b13e84c22a8e775f7f3bee3dc96e12bb9fcc00b9dbbbf2cbb6ba6cf039b';
+
+// Kuratierte Hauptprojekte
+const PROJECTS = [
+  { name:'SV Hahnbach — Livesite', desc:'Tabellen, Spiele, Ligen-Pyramide aller Mannschaften',
+    url:'https://cr1983gh.github.io/sv-hahnbach/', icon:'⚽' },
+  { name:'Trading Signale', desc:'Täglicher Swing-Signal-Bericht',
+    url:'https://cr1983gh.github.io/trading-signal/', icon:'📈' },
+];
+
+async function sha256(s){
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+function show(){
+  document.getElementById('gate').classList.add('hidden');
+  const c = document.getElementById('content');
+  c.classList.remove('hidden');
+  renderCards();
+}
+function renderCards(){
+  const el = document.getElementById('cards');
+  el.innerHTML = PROJECTS.map(p => `
+    <a class="pcard" href="${p.url}">
+      <div class="pico">${p.icon}</div>
+      <div class="pinfo"><b>${p.name}</b><span>${p.desc}</span></div>
+      <div class="chev">→</div>
+    </a>`).join('');
+}
+async function tryLogin(){
+  const v = document.getElementById('pw').value;
+  if (!v) return;
+  if (await sha256(v) === H){ sessionStorage.setItem('deck7','1'); show(); }
+  else {
+    const e = document.getElementById('err');
+    e.textContent = 'Zugangscode falsch.';
+    setTimeout(()=>{ e.textContent=''; }, 2500);
+  }
+}
+document.getElementById('go').onclick = tryLogin;
+document.getElementById('pw').addEventListener('keydown', e => { if (e.key==='Enter') tryLogin(); });
+if (sessionStorage.getItem('deck7') === '1') show();
+</script>
+</body>
+</html>
